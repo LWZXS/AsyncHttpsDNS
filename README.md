@@ -45,6 +45,9 @@ optional arguments:
 3.foreign_domains.txt保存的是国外域名的地址，其实这个就是gfwlist域名，原因不用解释。实际上这个列表不需要这么大，只需要被屏蔽的又有CDN服务器的域名即可。
 4.重点！！使用-i参数指定你的代理服务器IP地址，默认的是日本Vultr地址，不一定合适你。
 
-
+###安装
+```
+pip3 install asynchttpsdns
+```
 
 
