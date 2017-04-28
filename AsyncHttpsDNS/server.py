@@ -1,15 +1,17 @@
 # coding=utf-8
-from dnslib import *
-from urllib.parse import urlencode
-from urllib.request import urlopen, Request
-from dns.resolver import Resolver
-from aiosocks.connector import ProxyConnector, ProxyClientRequest
-import os
-import json
-import logging
 import argparse
 import asyncio
+import json
+import logging
+import os
+from urllib.parse import urlencode
+from urllib.request import urlopen, Request
+
 import aiohttp
+from dns.resolver import Resolver
+from dnslib import *
+
+from AsyncHttpsDNS.aiosocks.connector import ProxyConnector, ProxyClientRequest
 
 
 class GoogleDirectConnector(aiohttp.TCPConnector):

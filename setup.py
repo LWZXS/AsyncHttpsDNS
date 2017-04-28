@@ -23,7 +23,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.0.2',
+    version='0.0.4',
 
     description='DNS Over Https Powered By Asyncio',
     long_description='完整的，无系统DNS依赖的，翻墙与国内CDN优化兼容的DNS Resolver，基于Google DNS Over Https',
@@ -74,7 +74,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['aiohttp', 'aiodns', 'dnspython', 'dnslib', 'argparse','aiosocks>=0.2.3'],
+    install_requires=['aiohttp', 'aiodns', 'dnspython', 'dnslib', 'argparse'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
@@ -84,7 +84,6 @@ setup(
     #     'dev': ['check-manifest'],
     #     'test': ['coverage'],
     # },
-    dependency_links=['https://github.com/lifetyper/aiosocks/archive/v0.2.3.zip#egg=aiosocks-0.2.3', ],
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
