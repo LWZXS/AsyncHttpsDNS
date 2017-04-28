@@ -84,7 +84,7 @@ setup(
     #     'dev': ['check-manifest'],
     #     'test': ['coverage'],
     # },
-    dependency_links=['git+https://github.com/lifetyper/aiosocks.git@v0.2.2#egg=aiosocks', ],
+    dependency_links=['git+https://github.com/lifetyper/aiosocks.git@v0.2.3#egg=aiosocks', ],
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
