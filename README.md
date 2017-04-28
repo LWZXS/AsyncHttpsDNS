@@ -7,7 +7,7 @@ DNS Over Https Powered By Asyncio
 
 2. PRCDNS仅仅支持TCP，操蛋的是Dnsmasq不支持TCP Query Only，还得加一层PDNSD才行，这个太浪费了。
 虽然考虑到UDP DNS查询的严重劫持情况和UDP本身无连接的脆弱，其实TCP查询是合理的，不过我的想法更简单：只把这玩意部署在路由器上，出去的只有到Google Https的连接。
-至于怎么连接到Google Https，你路由器不可能没有SS吧，所以我没有做额外的Socks代理支持。
+至于怎么连接到Google Https，你路由器不可能没有SS吧，如果路由器不能翻墙，就用shadowsocks提供的socks5代理，见下方参数。
 至于什么样的路由器才能支持Python3和aiohttp，x86软路由当然是王道。
 
 
@@ -38,12 +38,18 @@ optional arguments:
                         socks proxy IP:Port in format like: 127.0.0.1:1086
 ```
 
+1. AsyncHttpsDNS=>直接启动一个在5454端口的DNS服务器，无代理(如果你可以直连dns.google.com的话)，无翻墙域名优化，
+2. AsyncHttpsDNS -s 127.0.0.1:1086,同上，但使用127.0.0.1:1086地址上的socks5代理(shadowsocks默认地址)，
+3. AsyncHttpsDNS -s 127.0.0.1:1086 -i 45.32.15.77，同上，但请求被墙的域名是使用45.32.15.77作为client ip，对应域名解析的结果为此IP优化，
+4. AsyncHttpsDNS -s 127.0.0.1:1086 -i 45.32.15.77 -f mydomains.txt，同上，但使用当前目录的mydomains.txt文件作为被墙域名列表，
+5. sudo AsyncHttpsDNS -s 127.0.0.1:1086 -i 45.32.15.77 -f mydomains.txt -p 53,同上,但监听本地53端口。
 ### 使用注意：
 
 1. 默认监听5454端口，无缓存，配合dnsmasq使用已经足够了，如果要改成53端口，需要有sudo权限。
 2. 默认使用114和腾讯DNS解析dns.google.com地址，这个在国内用基本没啥问题，如果你本地的114和腾讯DNS都会被污染，自己改代码，为这个加参数挺无聊的。
 3. foreign_domains.txt保存的是国外域名的地址，其实这个就是gfwlist域名，原因不用解释。实际上这个列表不需要这么大，只需要被屏蔽的又有CDN服务器的域名即可。
 4. 重点！！使用-i参数指定你的代理服务器IP地址，默认的是日本Vultr地址，不一定合适你。
+
 
 ### 安装
 ```
