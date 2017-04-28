@@ -22,8 +22,8 @@ DNS Over Https Powered By Asyncio
 ### Help:
 
 ```
-usage: AsyncHttpsDNS.py [-h] [-p [PORT]] [-i [IP]] [-f [FILE]]
-                               [-d [DEBUG]]
+usage: AsyncHttpsDNS [-h] [-p [PORT]] [-i [IP]] [-f [FILE]] [-d [DEBUG]]
+                     [-s [SOCKS]]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -34,6 +34,8 @@ optional arguments:
                         file that contains blocked domains
   -d [DEBUG], --debug [DEBUG]
                         enable debug logging
+  -s [SOCKS], --socks [SOCKS]
+                        socks proxy IP:Port in format like: 127.0.0.1:1086
 ```
 
 ### 使用注意：
