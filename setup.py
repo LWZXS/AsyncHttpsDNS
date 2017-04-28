@@ -74,7 +74,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['aiohttp', 'aiodns', 'dnspython', 'dnslib', 'argparse','aiosocks'],
+    install_requires=['aiohttp', 'aiodns', 'dnspython', 'dnslib', 'argparse','aiosocks>=0.2.3'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
@@ -84,7 +84,7 @@ setup(
     #     'dev': ['check-manifest'],
     #     'test': ['coverage'],
     # },
-    dependency_links=['git+https://github.com/lifetyper/aiosocks.git@v0.2.3#egg=aiosocks', ],
+    dependency_links=['https://github.com/lifetyper/aiosocks/archive/v0.2.3.zip#egg=aiosocks-0.2.3', ],
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
