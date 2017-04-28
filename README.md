@@ -6,11 +6,8 @@ DNS Over Https Powered By Asyncio
 1. 学习AsyncIO，尤其是UDP Server，就这么简单。
 
 2. PRCDNS仅仅支持TCP，操蛋的是Dnsmasq不支持TCP Query Only，还得加一层PDNSD才行，这个太浪费了。
-
 虽然考虑到UDP DNS查询的严重劫持情况和UDP本身无连接的脆弱，其实TCP查询是合理的，不过我的想法更简单：只把这玩意部署在路由器上，出去的只有到Google Https的连接。
-
-至于怎么连接到Google Https，你路由器不可能没有SS吧，所以我没有做额外的Socks支持。
-
+至于怎么连接到Google Https，你路由器不可能没有SS吧，所以我没有做额外的Socks代理支持。
 至于什么样的路由器才能支持Python3和aiohttp，x86软路由当然是王道。
 
 
