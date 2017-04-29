@@ -11,7 +11,7 @@ import aiohttp
 from dns.resolver import Resolver
 from dnslib import *
 
-from AsyncHttpsDNS.aiosocks.connector import ProxyConnector, ProxyClientRequest
+from aiosocks.connector import ProxyConnector, ProxyClientRequest
 
 
 class GoogleDirectConnector(aiohttp.TCPConnector):
