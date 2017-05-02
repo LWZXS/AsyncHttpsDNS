@@ -100,7 +100,7 @@ class DNSServerProtocol(asyncio.DatagramProtocol):
 
     async def query_and_answer(self, request, client):
         logging.debug('Request name: {}, Request type:{}.'.format(request.q.qname, QTYPE[request.q.qtype]))
-        if self.cache.get(request.q.qname):
+        if self.cache.get(request.q.qname) and 'Answer' in self.cache.get(request.q.qname).keys():
             json_resp = self.cache.get(request.q.qname)
             logging.debug('Cached:{}'.format(request.q.qname))
         else:
