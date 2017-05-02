@@ -10,6 +10,7 @@ from cachetools import TTLCache
 import aiohttp
 from dns.resolver import Resolver
 from dnslib import *
+from retry import retry
 
 from aiosocks.connector import ProxyConnector, ProxyClientRequest
 
@@ -63,20 +64,25 @@ class DNSServerProtocol(asyncio.DatagramProtocol):
                 return self.proxy_ip
             return self.public_ip
 
+    @retry(exceptions=aiohttp.client_exceptions.ClientConnectionError, tries=3)
     async def http_fetch(self, url):
         with await self.semaphore:
             if self.socks_proxy:
-                with aiohttp.ClientSession(loop=self.loop, connector=ProxyConnector(remote_resolve=True),
-                                           request_class=ProxyClientRequest) as session:
+                connector = ProxyConnector(remote_resolve=True)
+                request_class = ProxyClientRequest
+
+            else:
+                connector = GoogleDirectConnector(self.google_ip)
+                request_class = aiohttp.client_reqrep.ClientRequest
+
+            with aiohttp.ClientSession(loop=self.loop, connector=connector, request_class=request_class) as session:
+                try:
                     async with session.get(url, proxy=self.socks_proxy, headers=self.headers) as resp:
                         result = await resp.read()
                         return result
-
-            else:
-                with aiohttp.ClientSession(loop=self.loop, connector=GoogleDirectConnector(self.google_ip)) as session:
-                    async with session.get(url, headers=self.headers) as resp:
-                        result = await resp.read()
-                        return result
+                except aiohttp.client_exceptions.ClientConnectionError:
+                    # FIXME,should we retry in aiohttp or just leave it to client?
+                    pass
 
     @staticmethod
     def build_answer_from_json(request, json_item):
@@ -92,14 +98,21 @@ class DNSServerProtocol(asyncio.DatagramProtocol):
         elif 'Authority' in json_item.keys():
             for auth in json_item['Authority']:
                 q_type = QTYPE[auth['type']]
-            q_type_class = globals()[q_type]
-            ans.add_auth(RR(rname=auth['name'], rtype=auth['type'], ttl=auth['TTL'],
-                            rdata=q_type_class(auth['data'])))
+                q_type_class = globals()[q_type]
+                ans.add_auth(RR(rname=auth['name'], rtype=auth['type'], ttl=auth['TTL'],
+                                rdata=q_type_class(auth['data'])))
         packet_resp = ans.pack()
         return packet_resp
 
+    def return_serv_fail(self, request, client):
+        ans = request.reply()
+        ans.header.rcode = 2
+        packet_resp = ans.pack()
+        self.transport.sendto(packet_resp, client)
+
     async def query_and_answer(self, request, client):
         logging.debug('Request name: {}, Request type:{}.'.format(request.q.qname, QTYPE[request.q.qtype]))
+        serv_fail = False
         if self.cache.get(request.q.qname) and 'Answer' in self.cache.get(request.q.qname).keys():
             json_resp = self.cache.get(request.q.qname)
             logging.debug('Cached:{}'.format(request.q.qname))
@@ -109,10 +122,18 @@ class DNSServerProtocol(asyncio.DatagramProtocol):
             url = self.base_url + urlencode(
                 {'name': request.q.qname, 'type': request.q.qtype, 'edns_client_subnet': client_ip})
             logging.debug('Querying URL:{}.'.format(url))
-            json_resp = json.loads(await self.http_fetch(url))
-            self.cache[request.q.qname] = json_resp
-        packet_resp = self.build_answer_from_json(request, json_resp)
-        self.transport.sendto(packet_resp, client)
+            http_resp = await self.http_fetch(url)
+            if http_resp:
+                json_resp = json.loads(http_resp)
+                self.cache[request.q.qname] = json_resp
+            else:
+                logging.debug('Return Serv Fail!')
+                serv_fail = True
+        if serv_fail:
+            self.return_serv_fail(request, client)
+        else:
+            packet_resp = self.build_answer_from_json(request, json_resp)
+            self.transport.sendto(packet_resp, client)
 
 
 class AsyncDNS(object):
