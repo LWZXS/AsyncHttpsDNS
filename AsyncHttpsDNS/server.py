@@ -111,7 +111,6 @@ class DNSServerProtocol(asyncio.DatagramProtocol):
             logging.debug('Querying URL:{}.'.format(url))
             json_resp = json.loads(await self.http_fetch(url))
             self.cache[request.q.qname] = json_resp
-            logging.debug(json_resp)
         packet_resp = self.build_answer_from_json(request, json_resp)
         self.transport.sendto(packet_resp, client)
 
@@ -177,7 +176,7 @@ class AsyncDNS(object):
     def server_loop(self, port, proxy_ip, domain_file, socks_proxy, cache_size, cache_ttl):
 
         loop = asyncio.get_event_loop()
-        semaphore = asyncio.Semaphore(10)
+        semaphore = asyncio.Semaphore(20)
         google_ip = self.resolve_ip('dns.google.com')
         logging.debug('Google IP:{}'.format(google_ip))
         public_ip = self.get_public_ip()
