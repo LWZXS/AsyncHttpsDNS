@@ -76,13 +76,9 @@ class DNSServerProtocol(asyncio.DatagramProtocol):
                 request_class = aiohttp.client_reqrep.ClientRequest
 
             with aiohttp.ClientSession(loop=self.loop, connector=connector, request_class=request_class) as session:
-                try:
-                    async with session.get(url, proxy=self.socks_proxy, headers=self.headers) as resp:
-                        result = await resp.read()
-                        return result
-                except aiohttp.client_exceptions.ClientConnectionError:
-                    # FIXME,should we retry in aiohttp or just leave it to client?
-                    pass
+                async with session.get(url, proxy=self.socks_proxy, headers=self.headers) as resp:
+                    result = await resp.read()
+                    return result
 
     @staticmethod
     def build_answer_from_json(request, json_item):
