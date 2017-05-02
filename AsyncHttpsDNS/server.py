@@ -84,6 +84,7 @@ class DNSServerProtocol(asyncio.DatagramProtocol):
             {'name': request.q.qname, 'type': request.q.qtype, 'edns_client_subnet': client_ip})
         logging.debug(url)
         resp = json.loads(await self.http_fetch(url))
+        logging.debug(resp)
         ans = request.reply()
         ans.header.rcode = resp['Status']
         if 'Answer' in resp.keys():
@@ -111,11 +112,12 @@ class AsyncDNS(object):
                             help='IP of proxy server to bypass gfw')
         parser.add_argument('-f', '--file', default='BlockedDomains.dat', nargs='?',
                             help='file that contains blocked domains')
-        parser.add_argument('-d', '--debug', default=False, nargs='?',
+        parser.add_argument('-d', '--debug', action='store_true',
                             help='enable debug logging')
         parser.add_argument('-s', '--socks', nargs='?', help='socks proxy IP:Port in format like: 127.0.0.1:1086')
 
         args = parser.parse_args()
+        parser.set_defaults(debug=False)
 
         if args.debug:
             logging.basicConfig(level=logging.DEBUG)
