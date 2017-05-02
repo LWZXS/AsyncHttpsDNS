@@ -74,7 +74,8 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['aiohttp>=2.0', 'aiodns', 'aiosocks', 'dnspython', 'dnslib', 'argparse'],
+    install_requires=['aiohttp>=2.0.7', 'cachetools>=2.0.0', 'aiodns>=1.1.1', 'aiosocks==0.2.2', 'dnspython>=1.15.0',
+                      'dnslib>=0.9.7', 'args>=0.1.0'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
