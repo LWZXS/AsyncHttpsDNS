@@ -23,7 +23,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.0.6',
+    version='0.0.8',
 
     description='DNS Over Https Powered By Asyncio',
     long_description='完整的，无系统DNS依赖的，翻墙与国内CDN优化兼容的DNS Resolver，基于Google DNS Over Https',
@@ -75,7 +75,7 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=['aiohttp>=2.0.7', 'cachetools>=2.0.0', 'aiodns>=1.1.1', 'aiosocks==0.2.2', 'dnspython>=1.15.0',
-                      'dnslib>=0.9.7', 'args>=0.1.0'],
+                      'dnslib>=0.9.7', 'args>=0.1.0', 'retry>=0.9.2'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
