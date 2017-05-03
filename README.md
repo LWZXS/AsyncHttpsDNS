@@ -8,7 +8,7 @@ DNS Over Https Powered By Asyncio
 2. PRCDNS仅仅支持TCP，操蛋的是Dnsmasq不支持TCP Query Only，还得加一层PDNSD才行，这个太浪费了。
 虽然考虑到UDP DNS查询的严重劫持情况和UDP本身无连接的脆弱，其实TCP查询是合理的，不过我的想法更简单：只把这玩意部署在路由器上，出去的只有到Google Https的连接。
 至于怎么连接到Google Https，你路由器不可能没有SS吧，如果路由器不能翻墙，就用shadowsocks提供的socks5代理，见下方参数。
-至于什么样的路由器才能支持Python3和aiohttp，x86软路由当然是王道。
+至于什么样的路由器才能支持Python3和aiohttp，x86软路由当然是王道。现在的AsyncHttpsDns是同时支持UDP和TCP查询的。
 
 
 3. PRCDNS没有考虑到一种情况：很多网站其实我们都是走代理的，基于本地IP去做edns client ip查询其实是不合理的。
@@ -16,6 +16,7 @@ DNS Over Https Powered By Asyncio
 例如用中国IP去查Google的地址，返回的基本都是台湾的IP，可你的代理如果在日本甚至美国，这个就比较尴尬了，会增加50ms甚至100ms的延迟。
 
 4. DNS Over Https有一个鸡生蛋蛋生鸡的尴尬：如果DNS Over Https是唯一的解析器，现在你想解析域名就要去访问dns.google.com，可是你不知道dns.google.com的地址，于是你向自己查询，然后你自己又去问dns.google.com这个dns.google.com的地址是什么，于是。。。。
+AsyncHttpsDns用第三方指定DNS解析IP+Host Header的方式，解决了这个矛盾。
 
 5. PRCDNS只解析A记录，这个，如果只作为抗污染辅助手段还是可以的，如果要作为主DNS服务器，这个还是有点不能接受的，毕竟这是残缺的。
 
