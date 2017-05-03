@@ -16,3 +16,11 @@ build/lib/AsyncHttpsDNS/__init__.py
 build/lib/AsyncHttpsDNS/BlockedDomains.dat
 
 build/lib/AsyncHttpsDNS/server.py
+
+dist/AsyncHttpsDNS-0.0.7-py3-none-any.whl
+
+dist/AsyncHttpsDNS-0.0.8-py3-none-any.whl
+
+dist/AsyncHttpsDNS-0.0.7-py3-none-any.whl
+
+*.whl
