@@ -6,13 +6,13 @@ import logging
 import os
 from urllib.parse import urlencode
 from urllib.request import urlopen, Request
-from cachetools import TTLCache
+
 import aiohttp
+from aiosocks.connector import ProxyConnector, ProxyClientRequest
+from cachetools import TTLCache
 from dns.resolver import Resolver
 from dnslib import *
 from retry import retry
-
-from aiosocks.connector import ProxyConnector, ProxyClientRequest
 
 
 class GoogleDirectConnector(aiohttp.TCPConnector):
@@ -102,10 +102,11 @@ class DnsOverHttpsResolver(object):
 
     async def query_request(self, request):
         logging.debug('Request name: {}, Request type:{}.'.format(request.q.qname, QTYPE[request.q.qtype]))
-        if self.cache.get(request.q.qname) and 'Answer' in self.cache.get(request.q.qname).keys():
-            json_resp = self.cache.get(request.q.qname)
-            logging.debug('Cached:{}'.format(request.q.qname))
-            packet_resp = self.build_answer_from_json(request, json_resp)
+        cache_key = str(request.q.qname) + '_' + str(request.q.qtype)
+        cached_item = self.cache.get(cache_key)
+        if cached_item:
+            logging.debug('Cached:{}'.format(cache_key))
+            packet_resp = self.build_answer_from_json(request, cached_item)
         else:
             logging.debug('Fetch:{}'.format(request.q.qname))
             client_ip = self.match_client_ip(request.q.qname) + '/24'
@@ -115,7 +116,8 @@ class DnsOverHttpsResolver(object):
             http_resp = await self.http_fetch(url)
             if http_resp:
                 json_resp = json.loads(http_resp)
-                self.cache[request.q.qname] = json_resp
+                if 'Answer' in json_resp.keys():
+                    self.cache[str(request.q.qname) + '_' + str(request.q.qtype)] = json_resp
                 packet_resp = self.build_answer_from_json(request, json_resp)
             else:
                 logging.debug('Return Serv Fail!')
@@ -124,13 +126,19 @@ class DnsOverHttpsResolver(object):
 
     @staticmethod
     def send_response(transport, packet_resp, client):
-        transport.sendto(packet_resp, client)
+        try:
+            transport.sendto(packet_resp, client)
+        except AttributeError:
+            packet_resp = struct.pack(">H", packet_resp.__len__()) + packet_resp
+            transport.write(packet_resp)
+            transport.close()
 
 
 class UdpDnsServerProtocol(asyncio.DatagramProtocol):
-    def __init__(self, resolver=None):
+    def __init__(self, resolver=None, loop=None):
         self.resolver = resolver
         self.transport = None
+        self.loop = loop
 
     def connection_made(self, transport):
         self.transport = transport
@@ -142,27 +150,32 @@ class UdpDnsServerProtocol(asyncio.DatagramProtocol):
             return None
         else:
             asyncio.ensure_future(
-                self.resolver.query_and_answer(request=request, client=client, transport=self.transport))
+                self.resolver.query_and_answer(request=request, client=client, transport=self.transport),
+                loop=self.loop)
 
 
-# class TcpDnsServerProtocol(asyncio.Protocol):
-#     def __init__(self, resolver=None):
-#         self.resolver = resolver
-#         self.transport = None
-#
-#     def connection_made(self, transport):
-#         self.transport = transport
-#
-#     def datagram_received(self, data, client):
-#         try:
-#             request = DNSRecord.parse(data[2:])
-#             print(request)
-#         except DNSError:
-#             return None
-#         else:
-#             asyncio.ensure_future(
-#                 self.resolver.query_and_answer(request=request, client=client, transport=self.transport))
-#
+class TcpDnsServerProtocol(asyncio.Protocol):
+    def __init__(self, resolver=None, loop=None):
+        self.resolver = resolver
+        self.transport = None
+        self.client = None
+        self.loop = loop
+
+    def connection_made(self, transport):
+        self.transport = transport
+        self.client = transport.get_extra_info('peername')
+
+    def data_received(self, data):
+        try:
+            request = DNSRecord.parse(data[2:])
+        except DNSError:
+            self.transport.close()
+            return None
+        else:
+            asyncio.ensure_future(
+                self.resolver.query_and_answer(request=request, client=self.client, transport=self.transport),
+                loop=self.loop)
+
 
 class AsyncDNS(object):
     def run(self):
@@ -223,7 +236,6 @@ class AsyncDNS(object):
         return domain_set
 
     def server_loop(self, port, proxy_ip, domain_file, socks_proxy, cache_size, cache_ttl):
-
         loop = asyncio.get_event_loop()
         semaphore = asyncio.Semaphore(20)
         google_ip = self.resolve_ip('dns.google.com')
@@ -235,19 +247,21 @@ class AsyncDNS(object):
                                         proxy_ip=proxy_ip, google_ip=google_ip,
                                         domain_set=self.read_domain_file(domain_file), socks_proxy=socks_proxy,
                                         cache_size=cache_size, cache_ttl=cache_ttl)
-        udp_server = loop.create_datagram_endpoint(lambda: UdpDnsServerProtocol(resolver=resolver),
+        udp_server = loop.create_datagram_endpoint(lambda: UdpDnsServerProtocol(resolver=resolver, loop=loop),
                                                    local_addr=('0.0.0.0', port))
-        # tcp_server = loop.create_server(lambda: TcpDnsServerProtocol(resolver=resolver), '0.0.0.0', port)
+        tcp_server = loop.create_server(lambda: TcpDnsServerProtocol(resolver=resolver, loop=loop), '0.0.0.0', port)
         transport, protocol = loop.run_until_complete(udp_server)
         logging.info("Running Local DNS Server At Address: {}:{} ...".format(transport.get_extra_info('sockname')[0],
                                                                              transport.get_extra_info('sockname')[1]))
-        # loop.run_until_complete(tcp_server)
+        server = loop.run_until_complete(tcp_server)
         try:
             loop.run_forever()
         except KeyboardInterrupt:
             logging.info('Shutting down DNS Server!')
 
         transport.close()
+        server.close()
+        loop.run_until_complete(server.wait_closed())
         loop.close()
 
 

@@ -23,7 +23,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.0.8',
+    version='0.0.9',
 
     description='DNS Over Https Powered By Asyncio',
     long_description='完整的，无系统DNS依赖的，翻墙与国内CDN优化兼容的DNS Resolver，基于Google DNS Over Https',
